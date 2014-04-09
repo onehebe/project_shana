@@ -1,0 +1,12 @@
+#ifndef DATAREADER_GLOBAL_H
+#define DATAREADER_GLOBAL_H
+
+#include <QtCore/qglobal.h>
+
+#if defined(DATAREADER_LIBRARY)
+#  define DATAREADERSHARED_EXPORT Q_DECL_EXPORT
+#else
+#  define DATAREADERSHARED_EXPORT Q_DECL_IMPORT
+#endif
+
+#endif // DATAREADER_GLOBAL_H
