@@ -14,10 +14,12 @@ TEMPLATE = lib
 
 DEFINES += DATAREADER_LIBRARY
 
-SOURCES += datareader.cpp
+SOURCES += datareader.cpp \
+    data.cpp
 
 HEADERS += datareader.h\
-        datareader_global.h
+        datareader_global.h \
+    data.h
 
 unix {
     target.path = /usr/lib

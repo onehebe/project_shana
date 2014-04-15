@@ -7,6 +7,8 @@
 #include <QFile>
 #include <QScriptEngine>
 #include <QScriptValue>
+#include <QTextStream>
+#include "data.h"
 
 class DATAREADERSHARED_EXPORT DataReader
 {
@@ -17,18 +19,21 @@ public:
     bool setFile(QString path);
     bool setScript(QString path);
 
-    QMap<int,double,double,double>* getData();
-    QList<int>* getCountList();
-    QList<double>* getZapList();
-    QList<double>* getCurrentList();
-    QList<double>* getVoltageList();
-    QList<double>* getLeakageList();
+    Data* getData();
+    QVector<int>* getCountVector();
+    QVector<double>* getZapVector();
+    QVector<double>* getCurrentVector();
+    QVector<double>* getVoltageVector();
+    QVector<double>* getLeakageVector();
 
 protected:
     static QDir configDir;
     static QDir dataDir;
 
+    QString scriptContext;
+
     QScriptEngine interpreter;
+
     QScriptValue countValue;
     QScriptValue zapValue;
     QScriptValue currentValue;
