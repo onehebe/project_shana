@@ -18,9 +18,10 @@ public:
 
     bool setFile(QString path);
     bool setScript(QString path);
+    bool readData();
 
     Data* getData();
-    QVector<int>* getCountVector();
+    QVector<int> *getCountVector();
     QVector<double>* getZapVector();
     QVector<double>* getCurrentVector();
     QVector<double>* getVoltageVector();
@@ -29,6 +30,8 @@ public:
 protected:
     static QDir configDir;
     static QDir dataDir;
+
+    Data* data;
 
     QString scriptContext;
 

@@ -3,8 +3,6 @@
 
 DataReader::DataReader()
 {
-    operand = interpreter.newObject();
-    interpreter.globalObject().setProperty("line",operand);
 }
 
 bool DataReader::setFile(QString path)
@@ -31,17 +29,19 @@ bool DataReader::setScript(QString path)
     return false;
 }
 
-Data *DataReader::getData()
+bool DataReader::readData()
 {
-    Data *dataSet = new Data();
+    if (data)
+        delete data;
+    data = new Data();
     if (file.open(QIODevice::ReadOnly)){
         QTextStream dataStream(&file);
-        QString data = dataStream.readAll();
+        QString dataString = dataStream.readAll();
 
-        if (data.isEmpty())
-            return nullptr;
+        if (dataString.isEmpty())
+            return false;
 
-        QScriptValue dataLines(&interpreter,data);
+        QScriptValue dataLines(&interpreter,dataString);
 
         countValue = interpreter.newArray();
         zapValue = interpreter.newArray();
@@ -57,12 +57,12 @@ Data *DataReader::getData()
         interpreter.globalObject().setProperty("current",currentValue);
         interpreter.globalObject().setProperty("leakage",leakageValue);
 
-        QScriptValue result = engine.evaluate(scriptContext);
+        QScriptValue result = interpreter.evaluate(scriptContext);
 
         if (!result.isBool())
-            return nullptr;
+            return false;
         if (!result.toBool())
-            return nullptr;
+            return false;
 
         QList<QVariant> count,zap,voltage,current,leakage;
 
@@ -73,14 +73,54 @@ Data *DataReader::getData()
         leakage = leakageValue.toVariant().toList();
 
         for (int i=count.size()-1;i>=0;i--){
-            dataSet->count.append(countValue.at(i).toInt());
-            dataSet->zap.append(zapValue.at(i).toDouble());
-            dataSet->current.append(currentValue.at(i).toDouble());
-            dataSet->voltage.append(voltageValue.at(i).toDouble());
-            dataSet->leakage.append(leakageValue.at(i).toDouble());
+            data->count.append(count.at(i).toInt());
+            data->zap.append(zap.at(i).toDouble());
+            data->current.append(current.at(i).toDouble());
+            data->voltage.append(voltage.at(i).toDouble());
+            data->leakage.append(leakage.at(i).toDouble());
         }
 
-        return dataSet;
+        return true;
     }
+    return false;
+}
+
+Data *DataReader::getData()
+{
+    return data;
+}
+
+QVector<int> *DataReader::getCountVector()
+{
+    if (data)
+        return &(data->count);
+    return nullptr;
+}
+
+QVector<double> *DataReader::getZapVector()
+{
+    if (data)
+        return &(data->zap);
+    return nullptr;
+}
+
+QVector<double> *DataReader::getCurrentVector()
+{
+    if (data)
+        return &(data->current);
+    return nullptr;
+}
+
+QVector<double> *DataReader::getVoltageVector()
+{
+    if (data)
+        return &(data->voltage);
+    return nullptr;
+}
+
+QVector<double> *DataReader::getLeakageVector()
+{
+    if (data)
+        return &(data->leakage);
     return nullptr;
 }

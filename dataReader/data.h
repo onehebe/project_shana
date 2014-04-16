@@ -5,9 +5,9 @@
 
 class DATAREADERSHARED_EXPORT Data
 {
+public:
     Data();
 
-public:
     QVector<int> count;
     QVector<double> zap;
     QVector<double> voltage;

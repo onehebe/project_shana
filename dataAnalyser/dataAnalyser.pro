@@ -13,6 +13,22 @@ TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        mainwindow.cpp
+        mainwindow.cpp \
+    ivcurve.cpp
 
-HEADERS  += mainwindow.h
+HEADERS  += mainwindow.h \
+    ivcurve.h
+
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../dataReader/release/ -ldataReader
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../dataReader/debug/ -ldataReader
+else:unix: LIBS += -L$$OUT_PWD/../dataReader/ -ldataReader
+
+INCLUDEPATH += $$PWD/../dataReader
+DEPENDPATH += $$PWD/../dataReader
+
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../qcustomplot/release/ -lqcustomplot
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../qcustomplot/debug/ -lqcustomplot
+else:unix: LIBS += -L$$OUT_PWD/../qcustomplot/ -lqcustomplot
+
+INCLUDEPATH += $$PWD/../qcustomplot
+DEPENDPATH += $$PWD/../qcustomplot
