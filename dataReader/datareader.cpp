@@ -31,12 +31,13 @@ bool DataReader::setScript(QString path)
 
 bool DataReader::readData()
 {
-    if (data)
-        delete data;
+    //if (data)
+        //delete data;
     data = new Data();
     if (file.open(QIODevice::ReadOnly)){
         QTextStream dataStream(&file);
         QString dataString = dataStream.readAll();
+        file.close();
 
         if (dataString.isEmpty())
             return false;
@@ -52,15 +53,13 @@ bool DataReader::readData()
         interpreter.globalObject().setProperty("text",dataLines);
 
         interpreter.globalObject().setProperty("count",countValue);
-        interpreter.globalObject().setProperty("zap",countValue);
+        interpreter.globalObject().setProperty("zap",zapValue);
         interpreter.globalObject().setProperty("voltage",voltageValue);
         interpreter.globalObject().setProperty("current",currentValue);
         interpreter.globalObject().setProperty("leakage",leakageValue);
 
         QScriptValue result = interpreter.evaluate(scriptContext);
 
-        if (!result.isBool())
-            return false;
         if (!result.toBool())
             return false;
 
@@ -72,8 +71,9 @@ bool DataReader::readData()
         current = currentValue.toVariant().toList();
         leakage = leakageValue.toVariant().toList();
 
-        for (int i=count.size()-1;i>=0;i--){
-            data->count.append(count.at(i).toInt());
+        int maxCount = count.size()-1;
+        for (int i=0;i<maxCount;i++){
+            data->count.append(count.at(i).toDouble());
             data->zap.append(zap.at(i).toDouble());
             data->current.append(current.at(i).toDouble());
             data->voltage.append(voltage.at(i).toDouble());
@@ -90,7 +90,7 @@ Data *DataReader::getData()
     return data;
 }
 
-QVector<int> *DataReader::getCountVector()
+QVector<double> *DataReader::getCountVector()
 {
     if (data)
         return &(data->count);

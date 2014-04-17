@@ -3,8 +3,8 @@ regReal = "[+-]?[\\d]+([\\.][\\d]*)?([Ee][+-]?[0-9]{0,2})?";
 i=0; 
 j=0;
 len = lines.length;
-for(i=0;lines[i]!='Point,Zap voltage,Measurement voltage(Average),Measurement current(Average),Leak current'||i<len;i++){};
-if(i>=len){
+for(i=0;lines[i]!='Point,Zap voltage,Measurement voltage(Average),Measurement current(Average),Leak current'&&i<=len;i++){};
+if(i==len){
 	return false;
 }
 i++;

@@ -1,6 +1,6 @@
 #include "ivcurve.h"
 
-IVcurve::IVcurve(QWidget *parent) :
+IVCurve::IVCurve(QWidget *parent) :
     QWidget(parent)
 {
         plot = new QCustomPlot();
@@ -15,10 +15,21 @@ IVcurve::IVcurve(QWidget *parent) :
 
         layout = new QGridLayout();
         layout->addWidget(plot,0,0);
+        this->setLayout(layout);
 }
 
-void IVcurve::initPlot()
+void IVCurve::initPlot()
 {
+    QFont labelFont;
+    QFont trickFont;
+
+    labelFont.setFamily("Times New Roman");
+    labelFont.setBold(true);
+    labelFont.setPointSize(20);
+    trickFont.setFamily("Times New Roman");
+    trickFont.setBold(true);
+    labelFont.setPointSize(15);
+
     plot->xAxis->setVisible(true);
     plot->xAxis2->setVisible(true);
     plot->yAxis->setVisible(true);
@@ -40,18 +51,31 @@ void IVcurve::initPlot()
 
     plot->xAxis->setScaleType(QCPAxis::stLinear);
     plot->xAxis->setSubTickCount(4);
-    plot->yAxis->setTickStep(1);
+    plot->xAxis->setRange(0,1);
+    plot->yAxis->setTickStep(5);
     plot->yAxis->setSubTickCount(4);
     plot->xAxis2->setScaleType(QCPAxis::stLogarithmic);
     plot->xAxis2->setScaleLogBase(10);
     plot->xAxis2->setSubTickCount(4);
-    plot->xAxis2->setRangeLower(1e-10);
+    plot->xAxis2->setRangeLower(1e-12);
     plot->xAxis2->setNumberFormat("ebc");
     plot->xAxis2->setNumberPrecision(0);
+    plot->xAxis2->setTickStep(100);
+
+    plot->xAxis->setLabelFont(labelFont);
+    plot->xAxis->setTickLabelFont(labelFont);
+    plot->yAxis->setLabelFont(labelFont);
+    plot->yAxis->setTickLabelFont(labelFont);
+    plot->xAxis2->setLabelFont(labelFont);
+    plot->xAxis2->setTickLabelFont(labelFont);
+    plot->yAxis2->setLabelFont(labelFont);
+    plot->yAxis2->setTickLabelFont(labelFont);
 }
 
-bool IVcurve::addPlot(Data &data)
+bool IVCurve::addPlot(Data &data)
 {
+
+    plot->clearPlottables();
 
     QCPCurve *msCurve = new QCPCurve(plot->yAxis,plot->xAxis);
     QCPCurve *lkCurve = new QCPCurve(plot->yAxis,plot->xAxis2);
@@ -65,10 +89,48 @@ bool IVcurve::addPlot(Data &data)
     msCurve->setData(data.count,data.current,data.voltage);
     lkCurve->setData(data.count,data.current,data.leakage);
 
+    QPen redPen;
+    QPen bluePen;
+    QCPScatterStyle redScatter;
+    QCPScatterStyle blueScatter;
+
+    redPen.setColor(Qt::red);
+    redPen.setWidth(2.0);
+    bluePen.setColor(Qt::blue);
+    bluePen.setWidth(1.0);
+
+    redScatter.setPen(QPen(Qt::black));
+    redScatter.setBrush(QBrush(Qt::red));
+    redScatter.setShape(QCPScatterStyle::ssCircle);
+    blueScatter.setPen(QPen(Qt::blue));
+    blueScatter.setBrush(QBrush(Qt::blue));
+    blueScatter.setShape(QCPScatterStyle::ssTriangleInverted);
+
+    msCurve->setScatterStyle(redScatter);
+    lkCurve->setScatterStyle(blueScatter);
+
+    msCurve->setPen(redPen);
+    lkCurve->setPen(bluePen);
+
+    double upperVoltage = ceil(data.voltage.at(data.getMaximumVoltageIndex())/5.0)*5.0 + 0.1;
+    //if (upperVoltage > plot->xAxis->range().upper){
+        plot->xAxis->setRangeLower(0);
+        plot->xAxis->setRangeUpper(upperVoltage);
+    //}
+
+    double upperCurrent = ceil(data.current.at(data.getMaximumCurrentIndex()));
+    //if (upperCurrent > plot->yAxis->range().upper){
+        plot->yAxis->setRangeLower(0);
+        plot->yAxis->setRangeUpper(upperCurrent);
+        plot->yAxis2->setRangeUpper(upperCurrent);
+    //}
+
+    plot->replot();
+
     return true;
 }
 
-bool IVcurve::setPlot(int index, Data &data)
+bool IVCurve::setPlot(int index, Data &data)
 {
     if (plot->plottableCount()<(index*2+1))
         return false;
@@ -78,7 +140,7 @@ bool IVcurve::setPlot(int index, Data &data)
     return true;
 }
 
-bool IVcurve::deletePlot(int index)
+bool IVCurve::deletePlot(int index)
 {
     if (plot->plottableCount()<(index*2+1))
         return false;
@@ -87,7 +149,7 @@ bool IVcurve::deletePlot(int index)
     return true;
 }
 
-bool IVcurve::replot()
+bool IVCurve::replot()
 {
     plot->replot();
     return true;

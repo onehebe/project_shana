@@ -3,14 +3,15 @@
 
 #include <QWidget>
 #include <QGridLayout>
-#include "../qcustomplot/qcustomplot.h"
-#include "../dataReader/data.h"
+#include <QDebug>
+#include "qcustomplot.h"
+#include "data.h"
 
-class IVcurve : public QWidget
+class IVCurve : public QWidget
 {
     Q_OBJECT
 public:
-    explicit IVcurve(QWidget *parent = 0);
+    explicit IVCurve(QWidget *parent = 0);
 
     QCustomPlot *plot;
 
@@ -21,7 +22,7 @@ public:
     QList<bool> layerState;
 
     QGridLayout *layout;
-private:
+
     void initPlot();
     bool addPlot(Data &data);
     bool setPlot(int index,Data &data);

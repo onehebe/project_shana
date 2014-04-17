@@ -10,6 +10,8 @@
 #include <QTextStream>
 #include "data.h"
 
+#include <QDebug>
+
 class DATAREADERSHARED_EXPORT DataReader
 {
 
@@ -21,7 +23,7 @@ public:
     bool readData();
 
     Data* getData();
-    QVector<int> *getCountVector();
+    QVector<double> *getCountVector();
     QVector<double>* getZapVector();
     QVector<double>* getCurrentVector();
     QVector<double>* getVoltageVector();
