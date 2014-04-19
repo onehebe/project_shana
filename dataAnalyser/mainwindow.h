@@ -13,13 +13,8 @@ public:
     MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-    void createActions();
-
-    QString currentPath;
-
+    QTabWidget *tabWidget;
     dataAnalyser *analyser;
-public slots:
-    void openData();
 };
 
 #endif // MAINWINDOW_H

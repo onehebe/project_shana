@@ -3,6 +3,7 @@
 
 DataReader::DataReader()
 {
+    data = new Data();
 }
 
 bool DataReader::setFile(QString path)
@@ -31,8 +32,8 @@ bool DataReader::setScript(QString path)
 
 bool DataReader::readData()
 {
-    //if (data)
-        //delete data;
+    if (data)
+        delete data;
     data = new Data();
     if (file.open(QIODevice::ReadOnly)){
         QTextStream dataStream(&file);
@@ -58,7 +59,9 @@ bool DataReader::readData()
         interpreter.globalObject().setProperty("current",currentValue);
         interpreter.globalObject().setProperty("leakage",leakageValue);
 
-        QScriptValue result = interpreter.evaluate(scriptContext);
+        interpreter.evaluate(scriptContext);
+
+        QScriptValue result =  interpreter.globalObject().property("status");
 
         if (!result.toBool())
             return false;
@@ -79,6 +82,7 @@ bool DataReader::readData()
             data->voltage.append(voltage.at(i).toDouble());
             data->leakage.append(leakage.at(i).toDouble());
         }
+        data->name = file.fileName();
 
         return true;
     }

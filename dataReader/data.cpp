@@ -5,6 +5,36 @@ Data::Data()
 {
 }
 
+int Data::getMaximumZapIndex()
+{
+    if (zap.isEmpty())
+        return 0;
+    double maximum = zap.first();
+    int index = 0;
+    for(auto it=zap.begin();it!=zap.end();++it){
+        if (maximum<(*it)){
+            maximum = (*it);
+            index = zap.indexOf(maximum);
+        }
+    }
+    return index;
+}
+
+int Data::getMinimumZapIndex()
+{
+    if (zap.isEmpty())
+        return 0;
+    double minimum = zap.first();
+    int index = 0;
+    for(auto it=zap.begin();it!=zap.end();++it){
+        if (minimum > (*it)){
+            minimum = (*it);
+            index = zap.indexOf(minimum);
+        }
+    }
+    return index;
+}
+
 int Data::getMaximumVoltageIndex()
 {
     if (voltage.isEmpty())

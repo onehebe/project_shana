@@ -14,6 +14,8 @@ class dataAnalyser : public QWidget
 public:
     explicit dataAnalyser(QWidget *parent = 0);
 
+    QMenuBar *menuBar;
+
     QGridLayout *layout;
     QVBoxLayout *infoLayout;
 
@@ -22,27 +24,40 @@ public:
     Data *data;
     DataReader *reader;
 
+    QGroupBox *deviceInfo;
+    QGroupBox *extractInfo;
+
     QLabel *nameLabel;
     QLabel *typeLabel;
-    QLabel *trig1Label;
-    QLabel *trig2Label;
+    QLabel *trig1CurrentLabel;
+    QLabel *trig1VoltageLabel;
+    QLabel *trig2VoltageLabel;
+    QLabel *trig2CurrentLabel;
     QLabel *holdingLabel;
 
     QLineEdit *nameText;
     QLineEdit *typeText;
-    QLineEdit *trig1Text;
-    QLineEdit *trig2Text;
+    QLineEdit *trig1CurrentText;
+    QLineEdit *trig1VoltageText;
+    QLineEdit *trig2CurrentText;
+    QLineEdit *trig2VoltageText;
     QLineEdit *holdingText;
+
+    void initMenuBar();
 
     bool isConfigSetted;
     bool setFile(QString &file);
     bool setConfig(QString &file);
     bool analyze(QString &file);
     bool plot();
+
 signals:
 
 public slots:
+    void openData();
 
+private:
+    QString currentPath;
 };
 
 #endif // DATAANALYSER_H
