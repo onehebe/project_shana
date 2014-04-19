@@ -16,11 +16,15 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     ivcurve.cpp \
-    dataanalyser.cpp
+    dataanalyser.cpp \
+    layoutdesigner.cpp \
+    databasemanager.cpp
 
 HEADERS  += mainwindow.h \
     ivcurve.h \
-    dataanalyser.h
+    dataanalyser.h \
+    layoutdesigner.h \
+    databasemanager.h
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../dataReader/release/ -ldataReader
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../dataReader/debug/ -ldataReader

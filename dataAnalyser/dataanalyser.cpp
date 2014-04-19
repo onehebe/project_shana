@@ -3,6 +3,11 @@
 dataAnalyser::dataAnalyser(QWidget *parent) :
     QWidget(parent)
 {
+    type = NONE;
+    countTrig1 = -1;
+    countTrig2 = -1;
+    holdingVoltage = 0;
+
     layout = new QGridLayout(this);
     infoLayout = new QVBoxLayout(this);
     curveWidget = new IVCurve(this);
@@ -135,12 +140,161 @@ bool dataAnalyser::analyze(QString &file)
         return false;
     }
     data = reader->getData();
+
+    if (!extract(data))
+        return false;
     return plot();
 }
 
 bool dataAnalyser::plot()
 {
+    if (type == NONE){
+        typeText->setText(tr("None"));
+    }else{
+        switch(type){
+        case RESISTOR:
+             typeText->setText(tr("Resistor"));
+             break;
+        case NONSNAPBACK:
+             typeText->setText(tr("Diode"));
+             break;
+        case SNAPBACK:
+             typeText->setText(tr("With SNAPBACK"));
+             break;
+        case UNDEFINED:
+             typeText->setText(tr("Undefined type"));
+             break;
+        }
+    }
+
+    if (countTrig1 == -1){
+        trig1CurrentText->setText(tr("None"));
+        trig1VoltageText->setText(tr("None"));
+    }else{
+        trig1CurrentText->setText(QString::number(data->current.at(countTrig1)));
+        trig1VoltageText->setText(QString::number(data->voltage.at(countTrig1)));
+    }
+
+    if (countTrig2 == -1){
+        trig2CurrentText->setText(tr("None"));
+        trig2VoltageText->setText(tr("None"));
+    }else{
+        trig2CurrentText->setText(QString::number(data->current.at(countTrig2)));
+        trig2VoltageText->setText(QString::number(data->voltage.at(countTrig2)));
+    }
+
+    if (holdingVoltage == 0){
+        holdingText->setText(tr("None"));
+    }else{
+        holdingText->setText(QString::number(holdingVoltage));
+    }
+
+    nameText->setText(data->name);
+
     return curveWidget->addPlot(*data);
+}
+
+bool dataAnalyser::extract(Data *srcData)
+{
+    int totalNum = srcData->count.size()-1;
+    int index = 0;
+    int firstRef=0;
+    int secondRef=0;
+    if (totalNum < 3){
+        type = UNDEFINED;
+        countTrig1 = -1;
+        countTrig2 = -1;
+        holdingVoltage = 0;
+        return false;
+    }
+    //resistor
+    double gradient1of3 = srcData->voltage.at(floor(totalNum/3.0))/srcData->zap.at(floor(totalNum/3.0));
+    double gradient2of3 = srcData->voltage.at(floor(2*totalNum/3.0))/srcData->zap.at(floor(2*totalNum/3.0));
+    double gradient3of3 = srcData->voltage.at(totalNum)/srcData->zap.at(totalNum);
+    if (0.9<(gradient1of3/gradient3of3) && (gradient1of3/gradient3of3)<1.1 && 0.9<(gradient2of3/gradient3of3) && (gradient2of3/gradient3of3)<1.1){
+        type = RESISTOR;
+        countTrig1 = -1;
+        countTrig2 = -1;
+        holdingVoltage = 0;
+        return true;
+    }
+
+    //find first ref point
+    for(index=1;index<=totalNum;index++){
+        if (((srcData->voltage.at(index)/srcData->zap.at(index)) < FST_REF_RATIO)){
+            if (srcData->voltage.at(index)*srcData->zap.at(index) > 0){
+                firstRef = index;
+                break;
+            }
+        }
+    }
+
+    if(index > totalNum || firstRef == 1){
+        type = RESISTOR;
+        countTrig1 = -1;
+        countTrig2 = -1;
+        holdingVoltage = 0;
+        return true;
+    }
+
+    //find 1st trigger point
+    for(index = firstRef;index>0;index--){
+        if ((srcData->voltage.at(index)/srcData->zap.at(index)) > FST_TRIG_RATIO){
+            countTrig1 = index;
+            break;
+        }
+    }
+
+    int tol = 0;
+    secondRef = firstRef-1;
+    //find 2st ref point
+    for(index = firstRef;(index<=totalNum)&&(tol<SND_TRIG_TOL);index++){
+        if (srcData->leakage.at(secondRef)*srcData->zap.at(secondRef) <= 0){
+            int tempVol1 = srcData->voltage.at(secondRef)-srcData->voltage.at(secondRef-1);
+            int tempVol2 = srcData->voltage.at(index)-srcData->voltage.at(secondRef);
+            if ((fabs(tempVol1/tempVol2) >5) || (fabs(tempVol1/tempVol2) >5)){
+                tol=SND_TRIG_TOL;
+                break;
+            }else{
+                secondRef=index;
+                tol = 0;
+                continue;
+            }
+        }
+        if (fabs((srcData->leakage.at(index)/srcData->leakage.at(secondRef))) > SND_TRIG_RATIO || fabs((srcData->leakage.at(index-1)/srcData->leakage.at(secondRef)) > SND_TRIG_RATIO)){
+           tol++;
+        }else{
+            secondRef=index;
+            tol=0;
+        }
+    }
+
+    //determine 2st trigger point
+    if(tol == SND_TRIG_TOL)
+        countTrig2 = secondRef;
+    else if(tol!=0 && index>totalNum)
+        countTrig2 = secondRef;
+    else
+        countTrig2 = -1;
+
+    //determin holding
+    int holdingPoint = firstRef+1;
+    holdingVoltage = srcData->voltage.at(holdingPoint);
+
+    for(index=holdingPoint; index<secondRef; index++){
+        if (srcData->voltage.at(index) < holdingVoltage){
+            holdingVoltage = srcData->voltage.at(index);
+            holdingPoint = index;
+        }
+    }
+
+    //detmermin type
+    if ((srcData->voltage.at(firstRef) < srcData->voltage.at(countTrig1)) && (srcData->voltage.at(holdingPoint) < srcData->voltage.at(countTrig1)))
+        type = SNAPBACK;
+    else
+        type = NONSNAPBACK;
+
+    return true;
 }
 
 void dataAnalyser::openData()

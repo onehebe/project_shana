@@ -4,6 +4,8 @@
 #include <QMainWindow>
 #include <QDebug>
 #include "dataanalyser.h"
+#include "layoutdesigner.h"
+#include "databasemanager.h"
 
 class MainWindow : public QMainWindow
 {
@@ -15,6 +17,8 @@ public:
 
     QTabWidget *tabWidget;
     dataAnalyser *analyser;
+    layoutDesigner *designer;
+    dataBaseManager *manager;
 };
 
 #endif // MAINWINDOW_H

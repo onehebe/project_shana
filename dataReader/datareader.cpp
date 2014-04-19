@@ -82,7 +82,8 @@ bool DataReader::readData()
             data->voltage.append(voltage.at(i).toDouble());
             data->leakage.append(leakage.at(i).toDouble());
         }
-        data->name = file.fileName();
+        QFileInfo finfo(file);
+        data->name = finfo.baseName();
 
         return true;
     }

@@ -5,8 +5,12 @@ MainWindow::MainWindow(QWidget *parent)
 {
     tabWidget = new QTabWidget();
     analyser = new dataAnalyser(this);
+    designer = new layoutDesigner(this);
+    manager = new dataBaseManager(this);
 
     tabWidget->addTab(analyser,"Data");
+    tabWidget->addTab(designer,"layout");
+    tabWidget->addTab(manager,"database");
 
     this->setCentralWidget(tabWidget);
     this->setMinimumHeight(600);

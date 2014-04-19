@@ -61,6 +61,7 @@ void IVCurve::initPlot()
     plot->xAxis->setRange(0,5);
     plot->xAxis->setAutoTickStep(false);
     plot->xAxis->setTickStep(5);
+    plot->yAxis->setAutoTickStep(false);
     plot->yAxis->setSubTickCount(4);
     plot->xAxis2->setScaleType(QCPAxis::stLogarithmic);
     plot->xAxis2->setScaleLogBase(100);
@@ -401,7 +402,7 @@ bool IVCurve::reScaleCurrent()
         plot->yAxis->setRangeLower(pow(double(10),floor(log10(fabs(minCurrent)))));
         plot->yAxis2->setRangeLower(pow(double(10),floor(log10(fabs(minCurrent)))));
 
-        if (fabs(maxCurrent)/fabs(minCurrent)>1e4){
+        if (fabs(maxCurrent)/fabs(minCurrent)>1e8){
             plot->yAxis->setScaleLogBase(100);
             plot->yAxis2->setScaleLogBase(100);
         }else{
@@ -425,17 +426,17 @@ bool IVCurve::reScaleLeakage()
     double minLeakage = data->leakage.at(minLeakageIndex);
 
     if (xAxis2Linear->isChecked()){
-        plot->xAxis->setRangeUpper(pow(double(10),ceil(log10(fabs(maxLeakage)))));
-        plot->xAxis->setRangeLower(0);
-        plot->xAxis->setTickStep(pow(double(10),ceil(log10(fabs(minLeakage)))-1));
+        plot->xAxis2->setRangeUpper(pow(double(10),ceil(log10(fabs(maxLeakage)))));
+        plot->xAxis2->setRangeLower(0);
+        plot->xAxis2->setTickStep(pow(double(10),ceil(log10(fabs(minLeakage)))-1));
     }else{
-        plot->xAxis->setRangeUpper(pow(double(10),ceil(log10(fabs(maxLeakage)))+1));
-        plot->xAxis->setRangeLower(pow(double(10),floor(log10(fabs(minLeakage)))-1));
+        plot->xAxis2->setRangeUpper(pow(double(10),ceil(log10(fabs(maxLeakage)))+1));
+        plot->xAxis2->setRangeLower(pow(double(10),floor(log10(fabs(minLeakage)))-1));
 
         if (fabs(maxLeakage)/fabs(minLeakage)>1e4){
-            plot->xAxis->setScaleLogBase(100);
+            plot->xAxis2->setScaleLogBase(100);
         }else{
-            plot->xAxis->setScaleLogBase(10);
+            plot->xAxis2->setScaleLogBase(10);
         }
     }
 
@@ -470,8 +471,8 @@ bool IVCurve::replot()
 
 void IVCurve::setXAxis2ScaleType(int id)
 {
-    qDebug() << id;
-    if (id == 0){
+    Q_UNUSED(id);
+    if (xAxis2Linear->isChecked()){
         plot->xAxis2->setScaleType(QCPAxis::stLinear);
     }else{
         plot->xAxis2->setScaleType(QCPAxis::stLogarithmic);
@@ -482,13 +483,13 @@ void IVCurve::setXAxis2ScaleType(int id)
 
 void IVCurve::setYAxisScaleType(int id)
 {
-    qDebug() << id;
-    if (id == 0){
-        plot->yAxis->setScaleType(QCPAxis::stLogarithmic);
-        plot->yAxis2->setScaleType(QCPAxis::stLogarithmic);
-    }else{
+    Q_UNUSED(id);
+    if (yAxisLinear->isChecked()){
         plot->yAxis->setScaleType(QCPAxis::stLinear);
         plot->yAxis2->setScaleType(QCPAxis::stLinear);
+    }else{
+        plot->yAxis->setScaleType(QCPAxis::stLogarithmic);
+        plot->yAxis2->setScaleType(QCPAxis::stLogarithmic);
     }
     reScaleCurrent();
     replot();

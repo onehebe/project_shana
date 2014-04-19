@@ -9,7 +9,7 @@
 
 #define MIN_CUR 1e-3
 #define MIN_VOL 1e-2
-#define MIN_LEAKAGE 1e-11
+#define MIN_LEAKAGE 1e-13
 
 class IVCurve : public QWidget
 {

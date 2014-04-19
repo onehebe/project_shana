@@ -8,6 +8,17 @@
 
 #include <QDebug>
 
+#define NONE        0
+#define RESISTOR    1
+#define NONSNAPBACK 2
+#define SNAPBACK    3
+#define UNDEFINED   4
+
+#define FST_REF_RATIO 1.5
+#define FST_TRIG_RATIO 1.8
+#define SND_TRIG_RATIO 1.5
+#define SND_TRIG_TOL    6
+
 class dataAnalyser : public QWidget
 {
     Q_OBJECT
@@ -50,6 +61,7 @@ public:
     bool setConfig(QString &file);
     bool analyze(QString &file);
     bool plot();
+    bool extract(Data *srcData);
 
 signals:
 
@@ -58,6 +70,11 @@ public slots:
 
 private:
     QString currentPath;
+
+    int type;
+    int countTrig1;
+    int countTrig2;
+    double holdingVoltage;
 };
 
 #endif // DATAANALYSER_H
