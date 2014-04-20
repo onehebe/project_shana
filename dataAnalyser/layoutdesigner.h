@@ -2,6 +2,7 @@
 #define LAYOUTDESIGNER_H
 
 #include <QWidget>
+#include <QPainter>
 
 class layoutDesigner : public QWidget
 {
@@ -13,6 +14,10 @@ signals:
 
 public slots:
 
+
+    // QWidget interface
+protected:
+    void paintEvent(QPaintEvent *);
 };
 
 #endif // LAYOUTDESIGNER_H

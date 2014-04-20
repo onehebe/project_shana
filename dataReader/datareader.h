@@ -10,8 +10,6 @@
 #include <QTextStream>
 #include "data.h"
 
-#include <QDebug>
-
 class DATAREADERSHARED_EXPORT DataReader
 {
 
@@ -20,6 +18,8 @@ public:
 
     bool setFile(QString path);
     bool setScript(QString path);
+    bool setScript(QFile *scriptFile);
+    bool setScriptContext(QString scriptcontex);
     bool readData();
 
     Data* getData();

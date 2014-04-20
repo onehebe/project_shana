@@ -3,7 +3,6 @@
 
 #include <QWidget>
 #include <QGridLayout>
-#include <QDebug>
 #include "qcustomplot.h"
 #include "data.h"
 
@@ -43,6 +42,9 @@ public:
 
     QCheckBox *measurement;
     QCheckBox *leakage;
+    QCheckBox *legend;
+
+    QPixmap getPixmap(int w, int h);
 
     void initPlot();
     void initAxisOption();
@@ -62,5 +64,6 @@ signals:
 public slots:
     void setXAxis2ScaleType(int id);
     void setYAxisScaleType(int id);
+    void setDisplayable(int id);
 };
 #endif // IVCURVE_H

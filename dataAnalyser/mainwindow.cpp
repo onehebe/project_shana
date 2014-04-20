@@ -16,6 +16,7 @@ MainWindow::MainWindow(QWidget *parent)
     this->setMinimumHeight(600);
     this->setMinimumWidth(800);
     this->setMenuBar(analyser->menuBar);
+    this->setStatusBar(analyser->statusBar);
 }
 
 MainWindow::~MainWindow()

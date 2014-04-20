@@ -2,7 +2,6 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QDebug>
 #include "dataanalyser.h"
 #include "layoutdesigner.h"
 #include "databasemanager.h"

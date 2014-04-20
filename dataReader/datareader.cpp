@@ -30,6 +30,27 @@ bool DataReader::setScript(QString path)
     return false;
 }
 
+bool DataReader::setScript(QFile *scriptFile)
+{
+    if (scriptFile){
+        scriptFile->open(QIODevice::ReadOnly);
+        QTextStream stream(&script);
+        scriptContext = stream.readAll();
+        scriptFile->close();
+        return true;
+    }
+    return false;
+}
+
+bool DataReader::setScriptContext(QString scriptcontex)
+{
+    if (!scriptcontex.isEmpty()){
+        scriptContext = scriptcontex;
+        return true;
+    }
+    return false;
+}
+
 bool DataReader::readData()
 {
     if (data)

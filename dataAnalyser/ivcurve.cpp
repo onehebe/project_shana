@@ -25,6 +25,11 @@ IVCurve::IVCurve(QWidget *parent) :
         initAxisOption();
 }
 
+QPixmap IVCurve::getPixmap(int w, int h)
+{
+    return plot->toPixmap(w,h);
+}
+
 void IVCurve::initPlot()
 {
     QFont labelFont;
@@ -41,6 +46,7 @@ void IVCurve::initPlot()
     plot->xAxis2->setVisible(true);
     plot->yAxis->setVisible(true);
     plot->yAxis2->setVisible(true);
+    plot->legend->setVisible(true);
 
     plot->xAxis->setLabel(tr("Voltage (V)"));
     plot->yAxis->setLabel(tr("Current (A)"));
@@ -80,6 +86,10 @@ void IVCurve::initPlot()
     plot->xAxis2->setTickLabelFont(labelFont);
     plot->yAxis2->setLabelFont(labelFont);
     plot->yAxis2->setTickLabelFont(labelFont);
+
+
+    plot->setAutoAddPlottableToLegend(true);
+    plot->legend->setFont(trickFont);
 }
 
 void IVCurve::initAxisOption()
@@ -88,16 +98,21 @@ void IVCurve::initAxisOption()
     layerGroup =new QButtonGroup();
     measurement = new QCheckBox(tr("Measurement"));
     leakage = new QCheckBox(tr("Leakage"));
+    legend = new QCheckBox(tr("Legend"));
+    layerGroup->setExclusive(false);
     measurement->setChecked(true);
     leakage->setChecked(true);
+    legend->setChecked(true);
     layerGroup->addButton(measurement);
     layerGroup->addButton(leakage);
-    layerGroup->setExclusive(false);
+    layerGroup->addButton(legend);
     QVBoxLayout *layerLyt = new QVBoxLayout();
     layerLyt->addWidget(measurement);
     layerLyt->addWidget(leakage);
+    layerLyt->addWidget(legend);
+
     layerOption->setLayout(layerLyt);
-    layerOption->setMaximumHeight(80);
+    layerOption->setMaximumHeight(100);
     layerOption->setMaximumWidth(150);
 
     yAxisOption = new QGroupBox(tr("Current scale:"));
@@ -140,6 +155,7 @@ void IVCurve::initAxisOption()
 
     connect(yAxisGroup,SIGNAL(buttonClicked(int)),this,SLOT(setYAxisScaleType(int)));
     connect(xAxis2Group,SIGNAL(buttonClicked(int)),this,SLOT(setXAxis2ScaleType(int)));
+    connect(layerGroup,SIGNAL(buttonClicked(int)),this,SLOT(setDisplayable(int)));
 }
 
 bool IVCurve::addPlot(Data &data)
@@ -153,9 +169,11 @@ bool IVCurve::addPlot(Data &data)
     plot->addPlottable(msCurve);
     plot->addPlottable(lkCurve);
 
-    plotCount ++;
-    msCurve->setName(QString("Measurement").append(QString::number(plotCount)));
-    lkCurve->setName(QString("Leakage").append(QString::number(plotCount)));
+    //plotCount ++;
+    //msCurve->setName(QString("Measurement").append(QString::number(plotCount)));
+    //lkCurve->setName(QString("Leakage").append(QString::number(plotCount)));
+    msCurve->setName(QString("Measurement"));
+    lkCurve->setName(QString("Leakage"));
     msCurve->setData(data.count,data.current,data.voltage);
     lkCurve->setData(data.count,data.current,data.leakage);
 
@@ -281,7 +299,7 @@ bool IVCurve::reScale()
 
     reScaleVoltage();
     reScaleCurrent();
-    //reScaleLeakage();
+    reScaleLeakage();
 
     return true;
 }
@@ -492,5 +510,28 @@ void IVCurve::setYAxisScaleType(int id)
         plot->yAxis2->setScaleType(QCPAxis::stLogarithmic);
     }
     reScaleCurrent();
+    replot();
+}
+
+void IVCurve::setDisplayable(int id)
+{
+    Q_UNUSED(id);
+    if(plot->plottableCount() == 0)
+        return;
+    if(measurement->isChecked()){
+        plot->plottable(0)->setVisible(true);
+    }else{
+        plot->plottable(0)->setVisible(false);
+    }
+    if(leakage->isChecked()){
+        plot->plottable(1)->setVisible(true);
+    }else{
+        plot->plottable(1)->setVisible(false);
+    }
+    if(legend->isChecked()){
+        plot->legend->setVisible(true);
+    }else{
+        plot->legend->setVisible(false);
+    }
     replot();
 }

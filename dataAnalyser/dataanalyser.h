@@ -2,11 +2,10 @@
 #define DATAANALYSER_H
 
 #include <QWidget>
+#include <Qprinter>
 #include "ivcurve.h"
 #include "data.h"
 #include "datareader.h"
-
-#include <QDebug>
 
 #define NONE        0
 #define RESISTOR    1
@@ -16,8 +15,8 @@
 
 #define FST_REF_RATIO 1.5
 #define FST_TRIG_RATIO 1.8
-#define SND_TRIG_RATIO 1.5
-#define SND_TRIG_TOL    6
+#define SND_TRIG_RATIO 1.6
+#define SND_TRIG_TOL    5
 
 class dataAnalyser : public QWidget
 {
@@ -26,6 +25,7 @@ public:
     explicit dataAnalyser(QWidget *parent = 0);
 
     QMenuBar *menuBar;
+    QStatusBar *statusBar;
 
     QGridLayout *layout;
     QVBoxLayout *infoLayout;
@@ -55,18 +55,22 @@ public:
     QLineEdit *holdingText;
 
     void initMenuBar();
+    void initStatusBar();
 
-    bool isConfigSetted;
+    bool isConfigLoaded;
     bool setFile(QString &file);
     bool setConfig(QString &file);
     bool analyze(QString &file);
     bool plot();
     bool extract(Data *srcData);
 
+    void createPDF(QString &path);
+
 signals:
 
 public slots:
     void openData();
+    void savePDF();
 
 private:
     QString currentPath;

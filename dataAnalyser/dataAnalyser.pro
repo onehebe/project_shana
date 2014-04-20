@@ -40,5 +40,7 @@ else:unix: LIBS += -L$$OUT_PWD/../qcustomplot/ -lqcustomplot
 INCLUDEPATH += $$PWD/../qcustomplot
 DEPENDPATH += $$PWD/../qcustomplot
 
-OTHER_FILES += \
-    config/interpreter.js
+OTHER_FILES +=
+
+RESOURCES += \
+    resource.qrc

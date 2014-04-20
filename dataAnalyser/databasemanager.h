@@ -2,6 +2,7 @@
 #define DATABASEMANAGER_H
 
 #include <QWidget>
+#include <QPainter>
 
 class dataBaseManager : public QWidget
 {
@@ -13,6 +14,10 @@ signals:
 
 public slots:
 
+
+    // QWidget interface
+protected:
+    void paintEvent(QPaintEvent *);
 };
 
 #endif // DATABASEMANAGER_H

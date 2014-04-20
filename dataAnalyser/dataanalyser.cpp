@@ -76,13 +76,22 @@ dataAnalyser::dataAnalyser(QWidget *parent) :
 
     reader = new DataReader();
 
-    isConfigSetted = false;
+    isConfigLoaded = false;
 
-    if (QFile::exists("F:/develop/qt/project_shana/dataAnalyser/config/interpreter.js")){
-        isConfigSetted = reader->setScript("F:/develop/qt/project_shana/dataAnalyser/config/interpreter.js");
+    if (QFile::exists("script/config/default/interpreter.js")){
+        QFile *scriptFile = new QFile("script/config/default/interpreter.js");
+        scriptFile->open(QIODevice::ReadOnly);
+        QTextStream scriptStream(scriptFile);
+        isConfigLoaded = reader->setScriptContext(scriptStream.readAll());
+        scriptFile->close();
+    }else{
+        isConfigLoaded = false;
+        QMessageBox noScript(QMessageBox::Warning,tr("Warning"),tr("Configurature loading failed."),QMessageBox::Ok);
+        noScript.exec();
     }
-
     initMenuBar();
+    initStatusBar();
+
 
     currentPath = "./";
 }
@@ -93,10 +102,13 @@ void dataAnalyser::initMenuBar()
 
     QMenu *fileMenu = menuBar->addMenu(tr("&File"));
     QMenu *editMenu = menuBar->addMenu(tr("&Edit"));
+    QMenu *exportMenu = menuBar->addMenu(tr("E&xport"));
 
     QAction *openAction = new QAction(tr("&Open"),this);
     QAction *saveAction = new QAction(tr("&Save"),this);
+    QAction *exportPDFAction = new QAction(tr("&Export to PDF"),this);
     connect(openAction,SIGNAL(triggered()),this,SLOT(openData()));
+    connect(exportPDFAction,SIGNAL(triggered()),this,SLOT(savePDF()));
 
     QAction *configActon = new QAction(tr("&Configure"),this);
 
@@ -105,6 +117,14 @@ void dataAnalyser::initMenuBar()
     fileMenu->addAction(saveAction);
 
     editMenu->addAction(configActon);
+
+    exportMenu->addAction(exportPDFAction);
+}
+
+void dataAnalyser::initStatusBar()
+{
+    statusBar = new QStatusBar();
+    statusBar->showMessage(tr("Interpreter: ").append((isConfigLoaded)? "loaded" : "loading failed."));
 }
 
 bool dataAnalyser::setFile(QString &file)
@@ -118,15 +138,15 @@ bool dataAnalyser::setFile(QString &file)
 bool dataAnalyser::setConfig(QString &file)
 {
     if (QFile::exists(file)){
-        isConfigSetted = reader->setScript(file);
-        return isConfigSetted;
+        isConfigLoaded = reader->setScript(file);
+        return isConfigLoaded;
     }
     return false;
 }
 
 bool dataAnalyser::analyze(QString &file)
 {
-    if (!isConfigSetted){
+    if (!isConfigLoaded){
         return false;
     }
     if (!setFile(file)){
@@ -143,6 +163,7 @@ bool dataAnalyser::analyze(QString &file)
 
     if (!extract(data))
         return false;
+    statusBar->showMessage(tr("Hello, yi shen. ").append(data->name));
     return plot();
 }
 
@@ -208,6 +229,14 @@ bool dataAnalyser::extract(Data *srcData)
         return false;
     }
     //resistor
+    if (srcData->zap.at(floor(totalNum/3.0))*srcData->zap.at(floor(2*totalNum/3.0))*srcData->zap.at(floor(3*totalNum/3.0)) == 0){
+        type = UNDEFINED;
+        countTrig1 = -1;
+        countTrig2 = -1;
+        holdingVoltage = 0;
+        return false;
+    }
+
     double gradient1of3 = srcData->voltage.at(floor(totalNum/3.0))/srcData->zap.at(floor(totalNum/3.0));
     double gradient2of3 = srcData->voltage.at(floor(2*totalNum/3.0))/srcData->zap.at(floor(2*totalNum/3.0));
     double gradient3of3 = srcData->voltage.at(totalNum)/srcData->zap.at(totalNum);
@@ -221,8 +250,8 @@ bool dataAnalyser::extract(Data *srcData)
 
     //find first ref point
     for(index=1;index<=totalNum;index++){
-        if (((srcData->voltage.at(index)/srcData->zap.at(index)) < FST_REF_RATIO)){
-            if (srcData->voltage.at(index)*srcData->zap.at(index) > 0){
+        if (srcData->voltage.at(index)*srcData->zap.at(index) > 0){
+            if ((srcData->voltage.at(index)/srcData->zap.at(index)) < FST_REF_RATIO){
                 firstRef = index;
                 break;
             }
@@ -239,36 +268,44 @@ bool dataAnalyser::extract(Data *srcData)
 
     //find 1st trigger point
     for(index = firstRef;index>0;index--){
-        if ((srcData->voltage.at(index)/srcData->zap.at(index)) > FST_TRIG_RATIO){
-            countTrig1 = index;
-            break;
+        if (srcData->zap.at(index)*srcData->voltage.at(index) > 0){
+            if ((srcData->voltage.at(index)/srcData->zap.at(index)) > FST_TRIG_RATIO){
+                countTrig1 = index;
+                break;
+            }
         }
     }
 
     int tol = 0;
-    secondRef = firstRef-1;
+    secondRef = firstRef;
     //find 2st ref point
-    for(index = firstRef;(index<=totalNum)&&(tol<SND_TRIG_TOL);index++){
-        if (srcData->leakage.at(secondRef)*srcData->zap.at(secondRef) <= 0){
-            int tempVol1 = srcData->voltage.at(secondRef)-srcData->voltage.at(secondRef-1);
-            int tempVol2 = srcData->voltage.at(index)-srcData->voltage.at(secondRef);
-            if ((fabs(tempVol1/tempVol2) >5) || (fabs(tempVol1/tempVol2) >5)){
+    for(index = firstRef+1;(index<=totalNum)&&(tol<SND_TRIG_TOL);index++){
+        if (srcData->leakage.at(index)*srcData->zap.at(index) <= 0){
+            double tempVol1 = srcData->voltage.at(secondRef)-srcData->voltage.at(secondRef-1);
+            double tempVol2 = srcData->voltage.at(index)-srcData->voltage.at(secondRef);
+            if (tempVol1*tempVol2 == 0){
+                secondRef=index+1;
+                index++;
+                tol=0;
+                continue;
+            }
+            if ((fabs(tempVol2/tempVol1) >5)){
                 tol=SND_TRIG_TOL;
                 break;
             }else{
-                secondRef=index;
+                secondRef=index+1;
+                index++;
                 tol = 0;
                 continue;
             }
         }
-        if (fabs((srcData->leakage.at(index)/srcData->leakage.at(secondRef))) > SND_TRIG_RATIO || fabs((srcData->leakage.at(index-1)/srcData->leakage.at(secondRef)) > SND_TRIG_RATIO)){
+        if (fabs((srcData->leakage.at(index)/srcData->leakage.at(secondRef))) > SND_TRIG_RATIO || fabs((srcData->leakage.at(secondRef)/srcData->leakage.at(index)) > SND_TRIG_RATIO)){
            tol++;
         }else{
             secondRef=index;
             tol=0;
         }
     }
-
     //determine 2st trigger point
     if(tol == SND_TRIG_TOL)
         countTrig2 = secondRef;
@@ -297,6 +334,46 @@ bool dataAnalyser::extract(Data *srcData)
     return true;
 }
 
+void dataAnalyser::createPDF(QString &path)
+{
+    if (!path.endsWith(".pdf",Qt::CaseInsensitive))
+        path.append(".pdf");
+    QPrinter pdfPrinter(QPrinter::HighResolution);
+    pdfPrinter.setPageSize(QPrinter::A4);
+    pdfPrinter.setOutputFormat(QPrinter::PdfFormat);
+    pdfPrinter.setOutputFileName(path);
+
+    curveWidget->plot->savePng("temp.png",800,600,2.0);
+
+    QString html;
+    html += "<h2 align='center'>TLP Data</h2>";
+    html += "<h4>Device Name</h4><br>";
+    html += nameText->text() + "<br>";
+    html += "<h4>Information:</h4><br>";
+    html += "Type: " + typeText->text() + "<br>";
+    html += "<table align=\"left\" border=\"2\" width=\"200\">";
+    if (trig1CurrentText->text() != "None"){
+        html += "<tr><td>I_t1</td><td>"+trig1CurrentText->text()+"</td></tr>";
+        html += "<tr><td>V_t1</td><td>"+trig1VoltageText->text()+"</td></tr>";
+    }
+    if (trig2CurrentText->text() != "None"){
+        html += "<tr><td>I_t2</td><td>"+trig2CurrentText->text()+"</td></tr>";
+        html += "<tr><td>V_t2</td><td>"+trig2VoltageText->text()+"</td></tr>";
+    }
+    if (holdingText->text() != "None"){
+        html += "<tr><td>V_h</td><td>"+holdingText->text()+"</td></tr>";
+    }
+    html += "</table><br>";
+
+    html += "<h4>Figure:</h4><br>";
+    html += "<img align=\"middle\" src=\"temp.png\" width=\"600\" height=\"450\" /><br>";
+
+    QTextDocument text;
+    text.setHtml(html);
+    text.print(&pdfPrinter);
+    text.end();
+}
+
 void dataAnalyser::openData()
 {
     QString file = QFileDialog::getOpenFileName(this,tr("Open File"),currentPath);
@@ -306,6 +383,10 @@ void dataAnalyser::openData()
     }
 }
 
-
+void dataAnalyser::savePDF()
+{
+    QString path = QFileDialog::getSaveFileName(this,tr("Export PDF"),QString(),"*.pdf");
+    createPDF(path);
+}
 
 
